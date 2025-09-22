@@ -8,6 +8,8 @@
 #    1. Custom fonts from a local directory.
 #    2. Zsh (Z Shell).
 #    3. Oh My Zsh and the Powerlevel10k theme.
+#    4. FNM (Fast Node Manager).
+#    5. pyenv (Python Version Manager).
 #
 #  Usage: ./setup.sh
 #
@@ -140,6 +142,66 @@ install_oh_my_zsh_p10k() {
     echo "Run 'p10k configure' in your new Zsh terminal to customize your prompt."
 }
 
+# 4. Install FNM (Fast Node Manager).
+install_fnm() {
+    print_header "Installing FNM (Fast Node Manager)"
+
+    # Check if fnm is already in the path
+    if command -v fnm &> /dev/null; then
+        echo "FNM is already installed and available in your PATH."
+        return 0
+    fi
+
+    echo "Installing FNM..."
+    # The installation script will attempt to update your shell configuration.
+    curl -fsSL https://fnm.vercel.app/install | bash
+
+    echo ""
+    echo "FNM installation script has completed."
+    echo "Please restart your terminal or run 'source ~/.bashrc' or 'source ~/.zshrc'"
+    echo "for the changes to take effect and to start using the 'fnm' command."
+}
+
+# 5. Install pyenv
+install_pyenv() {
+    print_header "Installing pyenv"
+
+    if [ -d "${HOME}/.pyenv" ]; then
+        echo "pyenv appears to be already installed in ~/.pyenv. Skipping."
+        return 0
+    fi
+
+    echo "Installing pyenv dependencies for building Python..."
+    # Install dependencies required to build Python versions with pyenv
+    sudo apt-get update
+    sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
+    libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+
+    echo "Running pyenv installer script..."
+    curl https://pyenv.run | bash
+
+    echo ""
+    echo "pyenv installation script finished."
+    echo "Adding pyenv configuration to shell startup files..."
+
+    # The pyenv installer script should add the necessary config to .bashrc.
+    # We will ensure it's also in .zshrc for Zsh users.
+    local zshrc_file="${HOME}/.zshrc"
+    if [ -f "$zshrc_file" ]; then
+        if ! grep -q 'PYENV_ROOT' "$zshrc_file"; then
+            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> "$zshrc_file"
+            echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> "$zshrc_file"
+            echo 'eval "$(pyenv init -)"' >> "$zshrc_file"
+            echo "Configuration added to .zshrc"
+        fi
+    fi
+
+    echo "Please restart your terminal or run 'source ~/.bashrc' or 'source ~/.zshrc'"
+    echo "for the changes to take effect."
+}
+
+
 # --- Menu and Main Execution ---
 
 # Display the main menu to the user.
@@ -151,7 +213,9 @@ show_menu() {
     echo "   [1] Install Custom Fonts"
     echo "   [2] Install Zsh"
     echo "   [3] Install Oh My Zsh + Powerlevel10k"
-    echo "   [4] Exit Script"
+    echo "   [4] Install FNM (Fast Node Manager)"
+    echo "   [5] Install pyenv"
+    echo "   [6] Exit Script"
     echo ""
 }
 
@@ -159,7 +223,7 @@ show_menu() {
 main() {
     while true; do
         show_menu
-        read -p "Enter your choice [1-4]: " choice
+        read -p "Enter your choice [1-6]: " choice
 
         case $choice in
             1)
@@ -172,6 +236,12 @@ main() {
                 install_oh_my_zsh_p10k
                 ;;
             4)
+                install_fnm
+                ;;
+            5)
+                install_pyenv
+                ;;
+            6)
                 echo "Exiting setup script. Goodbye!"
                 break
                 ;;
